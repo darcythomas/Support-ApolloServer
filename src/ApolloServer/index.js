@@ -2,10 +2,14 @@ const { ApolloServer, gql } = require('apollo-server');
 const raygun = require('raygun');
 
 const raygunClient = new raygun.Client().init({
-  apiKey: 'paste_your_api_key_here',
+  apiKey: process.env.RAYGUN_KEY,
   batch: true,
   reportUncaughtExceptions: true
 });
+
+
+
+
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
@@ -62,8 +66,8 @@ const resolvers = {
     csrfPrevention: true,
     cache: 'bounded',
     formatError: (err) => { 
-
-console.log("error",err);
+      raygunClient.send("apollo error", err )
+      console.log("error",err);
       return err;
     },
     /**
