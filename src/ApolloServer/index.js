@@ -77,10 +77,10 @@ const server = new ApolloServer({
   //     stack: err.extensions.exception.stacktrace.join(', \n')
   // }
   var errorx =   new Error( err.message);
-        stack: err.extensions.exception.stacktrace.join(', \n')
-    }
+  errorx.stack = err.extensions.exception.stacktrace.join(', \n')
+    
       
-    var aerror = new Error(err.message, {cause: err.extensions.exception});
+   
    
 //var errorx =  {message: err.message, stackTrace: err.extensions.exception.stacktrace}
  console.log('errorx',errorx);
