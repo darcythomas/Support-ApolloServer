@@ -1,3 +1,0 @@
-# Rename to .env
-RAYGUN_KEY="PASTE A REAL KEY HERE"
-NODE_ENV="development"

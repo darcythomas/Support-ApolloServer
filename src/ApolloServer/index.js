@@ -1,10 +1,12 @@
 const { ApolloServer, gql } = require('apollo-server');
 const raygun = require('raygun');
+require('dotenv').config();
 
 const raygunClient = new raygun.Client().init({
   apiKey: process.env.RAYGUN_KEY,
-  batch: true,
-  reportUncaughtExceptions: true
+  batch: false,
+  reportUncaughtExceptions: true,
+  debugMode: true,
 });
 
 
@@ -34,55 +36,76 @@ const typeDefs = gql`
 
 
 const books = [
-    {
-      title: 'The Awakening',
-      author: 'Kate Chopin',
-    },
-    {
-      title: 'City of Glass',
-      author: 'Paul Auster',
-    },
-  ];
+  {
+    title: 'The Awakening',
+    author: 'Kate Chopin',
+  },
+  {
+    title: 'City of Glass',
+    author: 'Paul Auster',
+  },
+];
 
 
-  // Resolvers define the technique for fetching the types defined in the
+// Resolvers define the technique for fetching the types defined in the
 // schema. This resolver retrieves books from the "books" array above.
 const resolvers = {
-    Query: {
-      books: () => books,
-    },
-  };
+  Query: {
+    books: () => books,
+  },
+};
 
 
-  const {
-    ApolloServerPluginLandingPageLocalDefault
-  } = require('apollo-server-core');
-  
-  // The ApolloServer constructor requires two parameters: your schema
-  // definition and your set of resolvers.
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    csrfPrevention: true,
-    cache: 'bounded',
-    formatError: (err) => { 
-      raygunClient.send("apollo error", err )
-      console.log("error",err);
-      return err;
-    },
-    /**
-     * What's up with this embed: true option?
-     * These are our recommended settings for using AS;
-     * they aren't the defaults in AS3 for backwards-compatibility reasons but
-     * will be the defaults in AS4. For production environments, use
-     * ApolloServerPluginLandingPageProductionDefault instead.
-    **/
-    plugins: [
-      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-    ],
-  });
-  
-  // The `listen` method launches a web server.
-  server.listen().then(({ url }) => {
-    console.log(`🚀  Server ready at ${url}`);
-  });
+const {
+  ApolloServerPluginLandingPageLocalDefault
+} = require('apollo-server-core');
+
+// The ApolloServer constructor requires two parameters: your schema
+// definition and your set of resolvers.
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
+  formatError: (err) => {
+
+    // throw new error //NO
+
+  //   var errorx =     {
+  //     name: err.name,
+  //     message: err.message,
+  //     stack: err.extensions.exception.stacktrace.join(', \n')
+  // }
+  var errorx =   new Error( err.message);
+        stack: err.extensions.exception.stacktrace.join(', \n')
+    }
+      
+    var aerror = new Error(err.message, {cause: err.extensions.exception});
+   
+//var errorx =  {message: err.message, stackTrace: err.extensions.exception.stacktrace}
+ console.log('errorx',errorx);
+
+    raygunClient.send( errorx, {rawError: err});
+
+
+
+
+    return err;
+  },
+  /**
+   * What's up with this embed: true option?
+   * These are our recommended settings for using AS;
+   * they aren't the defaults in AS3 for backwards-compatibility reasons but
+   * will be the defaults in AS4. For production environments, use
+   * ApolloServerPluginLandingPageProductionDefault instead.
+  **/
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
+});
+
+// The `listen` method launches a web server.
+server.listen().then(({ url }) => {
+  console.log(`🚀  Server ready at ${url}`);
+  //  console.log("ebv", process.env);
+});
